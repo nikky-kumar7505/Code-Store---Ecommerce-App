@@ -10,7 +10,11 @@ const { readdirSync } = require("fs")
 const { connectDB } = require("./db/connection")
 
 //handle connection errors
-app.use(cors({ origin : process.env.CLIENT_URL }))
+app.use(cors({ 
+    origin : process.env.CLIENT_URL,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+ }))
 app.use(express.json())
 
 connectDB();
