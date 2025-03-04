@@ -11,11 +11,14 @@ const { connectDB } = require("./db/connection")
 
 //handle connection errors
 app.use(cors({ 
-    origin : process.env.CLIENT_URL,
+    origin : process.env.CLIENT_URL || "http://localhost:3000",
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
- }))
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
+ }));
+
 app.use(express.json())
+app.use(express.urlencoded({ extended: true }));
 app.options("*", cors());
 
 connectDB();
