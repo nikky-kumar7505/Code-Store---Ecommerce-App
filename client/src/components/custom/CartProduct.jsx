@@ -33,7 +33,8 @@ const CartProduct = ({name, price, _id, image, rating, quantity, stock, blacklis
         }
 
         const order = await generatePayment(price * quantity)
-        await verifyPayment(
+        if (!order?.id) return
+        verifyPayment(
             order,
             [{id :_id, quantity, color}],
             "1234, Main Street"

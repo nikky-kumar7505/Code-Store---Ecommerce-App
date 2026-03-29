@@ -17,21 +17,31 @@ const HeaderDisplay = () => {
 
     ]
   return (
-
-<Carousel className="my-10 mx-auto w-[93vw] overflow-x-clip sm: overflow-visible">
-  <CarouselContent>
-    {
-        imageData.map((image)=>(
-             <CarouselItem key={image} >
-                <img src={image}  loading="lazy"  className='object-cover w-full h-[60vh] rounded-3xl'/>
-            </CarouselItem>   
-        ))
-    }
-  
-  </CarouselContent>
-  <CarouselPrevious />
-  <CarouselNext />
-</Carousel>
+    <section
+      className="relative my-6 sm:my-10 w-screen max-w-[100vw] left-1/2 -translate-x-1/2 overflow-x-clip sm:overflow-visible"
+      aria-label="Featured images"
+    >
+      <Carousel className="relative w-full">
+        <CarouselContent>
+          {imageData.map((image) => (
+            <CarouselItem key={image}>
+              <img
+                src={image}
+                loading="lazy"
+                alt=""
+                className="object-cover w-full h-[50vh] sm:h-[60vh] rounded-2xl sm:rounded-3xl"
+              />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious
+          className="z-10 left-3 sm:left-5 md:left-10 lg:left-12 top-1/2 -translate-y-1/2 border bg-background/90 shadow-md hover:bg-background"
+        />
+        <CarouselNext
+          className="z-10 right-3 sm:right-5 md:right-10 lg:right-12 top-1/2 -translate-y-1/2 border bg-background/90 shadow-md hover:bg-background"
+        />
+      </Carousel>
+    </section>
 
   )
 }

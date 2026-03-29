@@ -7,6 +7,7 @@ router.post("/create-product",verifyToken ,upload.array("images", 4),createProdu
 router.put("/update-product/:id", verifyToken, updateProduct);
 router.delete("/delete-product/:id", verifyToken, deleteProduct);
 router.get("/get-products", getProducts);
+router.get("/get-product-by-name", getProductByName);
 router.get("/get-product-by-name/:name", getProductByName);
 router.put("/blacklist-product/:id", verifyToken, blackListProduct)
 router.put("/remove-from-blacklist/:id" , verifyToken, removeFromBlacklist )

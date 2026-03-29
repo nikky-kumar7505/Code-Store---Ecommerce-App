@@ -178,7 +178,7 @@ const ReviewsComponent = ({productId}) => {
  
 
   return (
-   <div className="my-10 sm:my-20 w-[93vw] lg:w-[70vw] mx-auto ">
+   <div className="my-10 sm:my-20 w-full min-w-0 max-w-full">
         <h3 className='font-extrabold text-2xl text-gray-800 dark:text-white mb-8 text-center '>Reviews</h3>
 
         {/* write review section*/}

@@ -1,9 +1,12 @@
 import axios from "axios";
 import { toast } from 'sonner'
 import {useNavigate} from "react-router-dom"
+import { useDispatch } from "react-redux"
+import { emptyCart } from "@/redux/slices/cartSlice"
 
 const useRazorpay = () =>{
     const navigate = useNavigate()
+    const dispatch = useDispatch()
 
     const generatePayment = async (amount) =>{
         try {
@@ -19,7 +22,8 @@ const useRazorpay = () =>{
             const data = await  res.data;
             return data.data;
         } catch (error) {
-            return toast(error.response.data.message)
+            toast(error.response?.data?.message || "Payment init failed")
+            return null
         }
     };
 
@@ -50,11 +54,12 @@ const useRazorpay = () =>{
             image : "https://www.pexels.com/photo/brass-ornate-vintage-key-on-black-computer-keyboard-39389/",
             handler : async (response) =>{  
                 try {
-                    const res = await axios.post(
-                        import.meta.env.RAZORPAY_KEY_ID + "/verify-payment",
+                    const verifyRes = await axios.post(
+                        `${import.meta.env.VITE_API_URL}/verify-payment`,
                         {
-                            razorpay_order_id : options.id,
+                            razorpay_order_id : response.razorpay_order_id || options.id,
                             razorpay_payment_id : response.razorpay_payment_id,
+                            razorpay_signature : response.razorpay_signature,
                             amount : options.amount,
                             address,
                             productArray
@@ -65,12 +70,12 @@ const useRazorpay = () =>{
                             }, 
                         }
                     );
-                    const {data} = await res.data;
-                    toast(data.message);
+                    dispatch(emptyCart())
+                    toast(verifyRes.data?.message || "Payment successful");
                     navigate("/success")
 
                 } catch (error) {
-                    return toast(error.response.message)
+                    return toast(error.response?.data?.message || "Payment verification failed")
                 }
             },
             notes : {

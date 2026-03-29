@@ -3,7 +3,6 @@ const User = require("../models/User")
 var { validatePaymentVerification } = require('razorpay/dist/utils/razorpay-utils');
 const Product = require("../models/Product")
 const Order = require("../models/Order");
-const crypto = require("crypto");
 
 var instance = new Razorpay({
     key_id: process.env.RAZORPAY_KEY_ID,
@@ -13,11 +12,16 @@ var instance = new Razorpay({
 
 const generatePayment = async (req, res) =>{
     const userId = req.id;
+    const { amount } = req.body
+
+    if (amount == null || Number(amount) <= 0) {
+        return res.status(400).json({ success: false, message: "Valid amount is required" })
+    }
 
     try {
 
         const  options = {
-            amount: amount*100,  // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
+            amount: Number(amount) * 100,  // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
             currency: "INR",
             receipt: Math.random().toString(36).substring(2),
 
@@ -51,15 +55,29 @@ const verifyPayment = async(req, res) =>{
     const userId = req.id;
 
     try {
-        const {razorpay_order_id, razorpay_payment_id, amount, productArray, address,  } = req.body
-        const signature = crypto
-        .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-        .update(`${razorpay_order_id}  | ${razorpay_payment_id} `)
-        .digest("hex");
+        const {
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature,
+            amount,
+            productArray,
+            address,
+        } = req.body
+
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            return res.status(400).json({
+                success: false,
+                message: "Missing razorpay_order_id, razorpay_payment_id, or razorpay_signature",
+            })
+        }
+
+        if (!Array.isArray(productArray) || productArray.length === 0) {
+            return res.status(400).json({ success: false, message: "productArray is required" })
+        }
 
         const validatedPayment = validatePaymentVerification(
-            {order_id: razorpay_order_id, payment_id: razorpay_payment_id }, 
-            signature, 
+            { order_id: razorpay_order_id, payment_id: razorpay_payment_id },
+            razorpay_signature,
             process.env.RAZORPAY_KEY_SECRET
         );
 
@@ -69,25 +87,33 @@ const verifyPayment = async(req, res) =>{
                 .json({success : false, message : "Payment verification failed"})
         }
 
+        const productsForOrder = productArray.map((p) => ({
+            id: p.id,
+            quantity: p.quantity,
+            color: (p.color && String(p.color).trim()) ? p.color : "default",
+        }))
 
         for(const product of productArray){
             await User.findByIdAndUpdate(
                 {_id : userId},
-                {$push : {purchasedProducts : product.id}}
+                {$push : {purchasedProduct : product.id}}
             );
 
              await Product.findByIdAndUpdate(
                 {_id : product.id},
-                {$inc : {stock : -product.quantity}}
-             )
+                {$inc : {stock : -Number(product.quantity)}}
+            )
         }
 
+        const amountPaise = Number(amount)
+        const amountRupees = amountPaise >= 100 ? amountPaise / 100 : amountPaise
+
         await Order.create({
-            amount : amount/100,
+            amount : amountRupees,
             razorpayOrderId  : razorpay_order_id,
             razorpayPaymentId : razorpay_payment_id,
-            razorpaySignature : signature,
-            products : productArray,
+            razorpaySignature : razorpay_signature,
+            products : productsForOrder,
             address : address,
             userId : userId,
 

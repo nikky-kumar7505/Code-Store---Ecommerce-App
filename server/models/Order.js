@@ -27,9 +27,11 @@ const orderSchema = mongoose.Schema({
             type : mongoose.Schema.Types.ObjectId,
             ref : "Product"
           },
+          quantity : {
+            type : Number,
+          },
           quanity : {
             type : Number,
-            required : true, 
           },
           color :{
             type : String,

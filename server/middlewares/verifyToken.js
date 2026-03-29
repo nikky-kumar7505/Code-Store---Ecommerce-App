@@ -4,9 +4,6 @@ const verifyToken = (req, res, next) => {
     const token = 
         req.cookies?.token || req.header("Authorization")?.split(" ")[1]  //token is in this form : "bearer ldfsj3l4321o28"
 
-      
-        
-
     if(!token){
         return res.status(401).json({
             success : false,
@@ -15,7 +12,6 @@ const verifyToken = (req, res, next) => {
     }
 
     try {
-
         jwt.verify(token, process.env.JWT_SECRET, (err, user)=>{
             if(err){
                 return res
@@ -29,7 +25,6 @@ const verifyToken = (req, res, next) => {
 
         });
 
-        
     } catch (error) {
         return res.status(500).json({
             success : false ,

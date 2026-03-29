@@ -165,14 +165,18 @@ const getProducts = async (req, res) =>{
 
 
 const getProductByName = async (req, res) =>{
-    const {name} = req.params;
+    const name = (req.query.name ?? req.params.name ?? "").trim()
+
+    if (!name) {
+        return res.status(400).json({ success: false, message: "Product name is required" })
+    }
 
     try {
         const product = await Product.findOne({
             name : {
                 $regex : new RegExp(name, "i"),
             },
-        });
+        })
 
         if(!product) 
         return res

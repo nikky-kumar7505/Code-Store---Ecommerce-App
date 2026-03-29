@@ -30,10 +30,6 @@ const ProtectedRoute = ({children})=>{
         return <Navigate to="/login" />
     }
 
-    if(isAuthenticated && cartItems.length === 0 && pathname === "/checkout"){
-        return <Navigate to="/" />
-    }
-
     return children;
 };
 

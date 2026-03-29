@@ -1,9 +1,9 @@
 import React from 'react'
 import { Label } from '../ui/label'
 import { Input } from '../ui/input'
-import { Edit, Search } from 'lucide-react'
+import { Edit, Search, Trash2 } from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select'
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/card'
+import { Card, CardContent, CardFooter } from '../ui/card'
 import { Button } from '../ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog'
 import { Textarea } from '../ui/textarea'
@@ -24,6 +24,7 @@ const AllProducts = () => {
   const [searchTerm, setSearchTerm] = useState("") //searchTerm = search
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
+  const [productToDelete, setProductToDelete] = useState(null)
 
   const dispatch = useDispatch()
   const {handleErrorLogout} = useErrorLogout()
@@ -88,6 +89,26 @@ const AllProducts = () => {
     setIsEditModalOpen(true)
   };
 
+  const confirmDeleteProduct = async () => {
+    if (!productToDelete?._id) return
+    try {
+      const res = await axios.delete(
+        `${import.meta.env.VITE_API_URL}/delete-product/${productToDelete._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      )
+      const { message } = res.data
+      toast.success(message || "Product deleted")
+      dispatch(setProducts(products.filter((p) => p._id !== productToDelete._id)))
+      setProductToDelete(null)
+    } catch (error) {
+      handleErrorLogout(error, "Error while deleting product")
+    }
+  }
+
   const handleEditSubmit = async(e)=>{
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -132,11 +153,11 @@ const AllProducts = () => {
 
 
   return (
-    <div className='mx-auto px-4 sm:px-8 -z-10 ' >
-      <h1 className='text-3xl font-bold mb-8' >Our Products</h1>
+    <div className="mx-auto w-full min-w-0 max-w-full px-1 sm:px-0">
+      <h1 className="mb-6 text-2xl font-bold tracking-tight sm:mb-8 sm:text-3xl">Our Products</h1>
 
       <div className="mb-8">
-        <form className='flex gap-4 items-end sm:w-[80vw]' >
+        <form className="flex w-full min-w-0 flex-col gap-4 sm:flex-row sm:items-end">
           <div className ="flex-1" >  
             <label className='block text-sm font-medium text-gray-700 mb-1' htmlFor="search">Search Product</label>
             <div className="relative">
@@ -167,38 +188,65 @@ const AllProducts = () => {
         products?.length === 0 ? (<p className='text-center text-gray-500 mt-8'>
           No products found, Try adjusting your search or category
         </p>) : (
-              <div className=" grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mx-2 sm:mx-0 ">
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
 
                 {
                   products?.map((product)=>  (
-                  <Card key={product._id} className="flex flex-col">
-                    <div className="aspect-square relative">
-                      <img src={product.image.url} alt={product.name} className='rounded-t-lg'/>
+                  <Card
+                    key={product._id}
+                    className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-border/80 shadow-sm transition-shadow hover:shadow-md"
+                  >
+                    <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden bg-muted sm:aspect-square">
+                      <img
+                        src={product.image.url}
+                        alt={product.name}
+                        className="h-full w-full object-cover transition-transform duration-300 hover:scale-[1.02]"
+                      />
                     </div>
-                    <CardContent className="flex-grow p-4">
-                        <h3 className='text-lg font-semibold mb-2'>{product.name}</h3>
-                        <p className='text-sm text-gray-600 mb-4'>{product.description}</p>
-                        <p className='text-lg font-bold' >₹{product.price}</p>
+                    <CardContent className="flex min-h-0 flex-1 flex-col gap-1 p-4 pb-3">
+                        <h3 className="line-clamp-2 text-base font-semibold leading-snug">{product.name}</h3>
+                        <p className="line-clamp-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+                          {product.description}
+                        </p>
+                        <p className="pt-2 text-lg font-bold tabular-nums">₹{product.price}</p>
                     </CardContent>
 
-                    <CardFooter className="p-4 pt-0 flex justify-between gap-1">
-
-                      <Button variant="outline"  onClick ={()=> handleEdit(product)} >
-                        <Edit className='mr-2 h-4 s-4' />Edit
-                      </Button>
-
-                      <Button onClick = {()=>{
+                    <CardFooter className="mt-auto flex flex-col gap-2 border-t bg-muted/30 p-3 sm:p-4">
+                      <div className="grid w-full grid-cols-2 gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-9 w-full font-medium"
+                          onClick={()=> handleEdit(product)}
+                        >
+                          <Edit className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+                          Edit
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="sm"
+                          className="h-9 w-full px-1 text-xs font-medium sm:text-sm"
+                          onClick={()=>{
                         !product.blacklisted
                           ? blacklistProduct(product._id)
                           : removeFromBlacklist(product._id)
-                      }} >
-                        {
-                          !product.blacklisted
-                          ? "Blacklist Product"
-                          : "Remove from Blacklist"
-                        }
+                      }}
+                        >
+                          {!product.blacklisted ? "Blacklist" : "Unblock"}
+                        </Button>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="h-9 w-full font-medium"
+                        onClick={() => setProductToDelete(product)}
+                      >
+                        <Trash2 className="mr-2 h-3.5 w-3.5" aria-hidden />
+                        Delete product
                       </Button>
-
                     </CardFooter>
                   </Card> 
                   )
@@ -211,6 +259,25 @@ const AllProducts = () => {
     
 
  
+    <Dialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Delete product?</DialogTitle>
+          <DialogDescription>
+            This will permanently remove “{productToDelete?.name}” from the catalog. This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button type="button" variant="outline" onClick={() => setProductToDelete(null)}>
+            Cancel
+          </Button>
+          <Button type="button" variant="destructive" onClick={confirmDeleteProduct}>
+            Delete
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
     <Dialog  open={isEditModalOpen} onOpenChange={setIsEditModalOpen} >
        <DialogContent className="sm:max-[425px]">
         <DialogHeader>

@@ -21,36 +21,38 @@ const chartData = [
 
 const chartConfig = {
   mouse: {
-    label: "Keyboard",
-    color: Color.customGrey ,
+    label: "Mouse",
+    color: Color.customGrey,
   },
   keyboard: {
-    label: "Mouse",
+    label: "Keyboard",
     color: Color.customYellow,
   },
-    Headset :{
-        label : "Headset",
-        color : Color.customIsabelline
-    }
-} 
+  headset: {
+    label: "Headset",
+    color: Color.customIsabelline,
+  },
+}
 
 export  function Chart1() {
   return (
-    <Card className="flex-1 rounded-xl bg-muted/50 md:min-hmin">
-        <CardHeader>
-            <CardTitle>Bar Chart - Multiple</CardTitle>
-            <CardDescription> January - June 2024</CardDescription>
+    <Card className="h-full w-full min-w-0 flex-1 rounded-xl bg-muted/50">
+        <CardHeader className="space-y-1 p-4 sm:p-6">
+            <CardTitle className="text-base sm:text-lg">Sales by category</CardTitle>
+            <CardDescription className="text-xs sm:text-sm">January – June 2024</CardDescription>
         </CardHeader>
-        <CardContent>
-        <ChartContainer config={chartConfig} >
-        <BarChart accessibilityLayer data={chartData}>
+        <CardContent className="px-2 pb-2 pt-0 sm:px-6">
+        <ChartContainer config={chartConfig} className="aspect-[4/3] w-full min-h-[200px] max-w-full sm:aspect-video">
+        <BarChart accessibilityLayer data={chartData} margin={{ left: 4, right: 4, top: 4, bottom: 0 }}>
             <CartesianGrid vertical={false} />
             <XAxis
             dataKey="month"
             tickLine={false}
-            tickMargin={10}
+            tickMargin={8}
             axisLine={false}
+            interval={0}
             tickFormatter={(value) => value.slice(0, 3)}
+            className="text-[10px] sm:text-xs"
             />
             <ChartTooltip content={<ChartTooltipContent />} />
             <Bar dataKey="mouse" fill="var(--color-mouse)" radius={4} />
@@ -59,11 +61,11 @@ export  function Chart1() {
         </BarChart>
         </ChartContainer>
         </CardContent>
-        <CardFooter className="flex-col items-start gap-2 text-sm" >
-            <div className="flex gap-2 font-medium leading-none" >
-                Trending up by 2.2% this month <TrendingUp className=" h-4 w-4 "/>
+        <CardFooter className="flex flex-col items-start gap-2 p-4 text-xs sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2 sm:text-sm" >
+            <div className="flex flex-wrap items-center gap-2 font-medium leading-snug" >
+                Trending up by 2.2% this month <TrendingUp className="h-4 w-4 shrink-0" aria-hidden />
             </div>
-            <div className="leading-none text-muted-foreground ">Showing total vositors for the last 3 months</div>
+            <div className="leading-snug text-muted-foreground">Showing total visitors for the last 6 months</div>
         </CardFooter>
     </Card>
   )

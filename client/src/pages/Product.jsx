@@ -6,31 +6,12 @@ import { starsGenerator } from '@/constants/helper'
 import useRazorpay from '@/hooks/use-razorpay'
 import { addToCart } from '@/redux/slices/cartSlice'
 import axios from 'axios'
-import { Circle, Minus, Plus, Pointer } from 'lucide-react'
+import { Circle, Minus, Plus } from 'lucide-react'
 import React, { useState } from 'react'
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-
-const imagesArray = [
-    {
-        url : "https://images.pexels.com/photos/14137630/pexels-photo-14137630.jpeg?auto=compress&cs=tinysrgb&w=600",
-        id : 1
-    },
-    {
-        url : "https://images.pexels.com/photos/14137630/pexels-photo-14137630.jpeg?auto=compress&cs=tinysrgb&w=600",
-        id : 2
-    },
-    {
-        url : "https://images.pexels.com/photos/14137630/pexels-photo-14137630.jpeg?auto=compress&cs=tinysrgb&w=600",
-        id : 3
-    },
-    {
-        url : "https://images.pexels.com/photos/14137630/pexels-photo-14137630.jpeg?auto=compress&cs=tinysrgb&w=600",
-        id : 4
-    },
-]
 
 const productStoke = 5;
 
@@ -57,30 +38,38 @@ const Product = () => {
     useEffect( ()=>{
         const fetchProductByName = async () =>{
             try {
-                const res = await axios.get(import.meta.env.VITE_API_URL + `/get-product-by-name/${productName?.split("-").join(" ")}`); //to remove %20
-                const {data} = await res.data;
-                console.log(data);
-                setProduct(data);
-                 
+                const nameFromPath = productName?.split("-").join(" ")?.trim()
+                const res = await axios.get(
+                    `${import.meta.env.VITE_API_URL}/get-product-by-name/${encodeURIComponent(nameFromPath)}`
+                )
+                const { data } = res.data
+                setProduct(data)
             } catch (error) {
-                
+                setProduct({})
             }
         }
-        fetchProductByName();
+        if (productName) fetchProductByName();
     }, [productName] )
 
     const calculateEmi = (price) => Math.round(price / 6)
 
     const checkAvailablity = async () =>{
-        if(pincode.trim() === ""){
-            setAvailblityMessage("Please enter a valid pincode" )
-            return ;
+        const code = pincode.trim()
+        if(code === ""){
+            setAvailblityMessage("Please enter a valid pincode")
+            return
         }
-        const res = await axios.get(import.meta.env.VITE_API_URL + `/get-picode/${pincode}`)
-        const data = await res.data;
-        setAvailblityMessage(data.message )
-        
-        
+        try {
+            const res = await axios.get(
+                `${import.meta.env.VITE_API_URL}/get-picode/${encodeURIComponent(code)}`
+            )
+            setAvailblityMessage(res.data?.message ?? "")
+        } catch (error) {
+            const msg =
+                error.response?.data?.message ||
+                "Unable to check pincode. Please try again."
+            setAvailblityMessage(msg)
+        }
     };
 
     const handleAddToCart = () =>{
@@ -102,11 +91,10 @@ const Product = () => {
                 image : product.images[0].url,
                 color : productColor,
                 stock : product.stock,
-                backlisted : product.backlisted
+                blacklisted : product.blacklisted
             })
         );
 
-        setProduct(1);
         toast("Product added to cart")
         
     }
@@ -131,7 +119,8 @@ const Product = () => {
             }
     
             const order = await generatePayment(product.price * productQuantity)
-            await verifyPayment(
+            if (!order?.id) return
+            verifyPayment(
                 order,
                 [{id :product._id, quantity : productQuantity, color : productColor}],
                 address
@@ -146,13 +135,14 @@ const Product = () => {
   return (
     <>
         <div>
-            <main className='w-[93vw lg:w-[70vw] flex flex-col sm:flex-row justify-start items-start gap-10 mx-auto my-10 '>
+            <main className='w-full flex flex-col sm:flex-row justify-start items-stretch sm:items-start gap-6 sm:gap-8 lg:gap-10 py-4 sm:py-8'>
                 
                 {/* left side */}
-                <div className="grid sm:w-[50%] gap-3 ">
+                <div className="grid w-full sm:w-1/2 gap-3 shrink-0">
                     <img 
                     src={product?.images?.[selectedImage]?.url} 
                     className='w-full lg:h-[30rem] rounded-xl object-center object-cover border dark:border-none ' 
+                    alt={product?.name || ""}
                     />          
 
                     <div className="grid grid-cols-4 gap-3">
@@ -160,9 +150,10 @@ const Product = () => {
                             product?.images?.map(({url, id}, index)=> (
                                 <img 
                                 src={url} 
-                                key={id} 
+                                key={id ?? index} 
                                 onClick={ ()=> setSelectedImage(index)  }
                                 className='rounded-xl filter hover:brightness-50 cursor-pointer transition-all ease-in-out duration-300 border dark:border-none ' 
+                                alt=""
                                 />
                         ) )}
                     </div>
@@ -172,7 +163,7 @@ const Product = () => {
 
 
                 {/* right side */}
-                <div className=" sm:w-[50%]  lg:w-[30%">
+                <div className="w-full sm:w-1/2 lg:w-[42%] min-w-0">
                         <div className="pb-5">
                             <h2 className='font-extrabold text-2xl' >{product?.name}</h2>
                             <p className='text-sm my-2' > {product.description} </p>
@@ -244,16 +235,16 @@ const Product = () => {
                             </div>
                             
                             <div className="grid gap-3 my-5">
-                                <div className="flex gap-3">
-                                    <Input placeholder="Enter Your Pincode here" onChange={ (e)=> setPincode(e.target.value) } />
-                                    <Button onClick={checkAvailablity} > Check Availablity </Button>
-                                </div>
-                                <p className='txt-sm px-2'>{availblityMessage}</p>
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-stretch">
+                                <Input className="min-w-0 flex-1" placeholder="Enter Your Pincode here" onChange={ (e)=> setPincode(e.target.value) } />
+                                <Button className="shrink-0" onClick={checkAvailablity} > Check Availablity </Button>
+                            </div>
+                                <p className='text-sm px-2'>{availblityMessage}</p>
                             </div>
 
-                            <div className="flex gap-3">
-                                <Button onClick={ ()=> setPurchaseProduct(true) } >Buy Now</Button>
-                                <Button variant="outline" onClick={handleAddToCart} >Add to Cart</Button>
+                            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                                <Button className="w-full sm:w-auto" onClick={ ()=> setPurchaseProduct(true) } >Buy Now</Button>
+                                <Button className="w-full sm:w-auto" variant="outline" onClick={handleAddToCart} >Add to Cart</Button>
                             </div>
 
                             {

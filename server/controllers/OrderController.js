@@ -31,28 +31,29 @@ const getAllOrders = async (req, res)=>{
     const {page, limit} = req.query;
 
     try {
-        const orders = await Order.find().populate({
-            path : "product.id", 
-            select : "name price category images"
-        }). populate({
-            path : "userId",
-            select : "name email"
-        })
-        .limit( limit*1)
-        .skip((page - 1)* limit)
-        .sort({createdAt : -1}) ;
+        const limitNum = Math.max(1, parseInt(limit, 10) || 10)
+        const pageNum = Math.max(1, parseInt(page, 10) || 1)
 
-        if(!orders) return res
-        .status(404)
-        .json({ success : false, message : "No orders to show"})
-    
-        const count = Order.countDocuments();
+        const count = await Order.countDocuments()
+
+        const orders = await Order.find()
+            .populate({
+                path: "products.id",
+                select: "name price category images",
+            })
+            .populate({
+                path: "userId",
+                select: "name email",
+            })
+            .limit(limitNum)
+            .skip((pageNum - 1) * limitNum)
+            .sort({ createdAt: -1 })
 
         return res.status(200).json({
-            success : true,
-            data : orders,
-            totalPages : Math.ceil(count / limit),
-            currentPage : Number(page),
+            success: true,
+            data: orders,
+            totalPages: Math.max(1, Math.ceil(count / limitNum)),
+            currentPage: pageNum,
         })
     } catch (error) {
         return res.status(500).json({success : false, message : error.message});

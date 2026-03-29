@@ -16,8 +16,6 @@ const Orders = () => {
 
   useEffect( ()=>{
     const fetchOrders = () =>{
-      try {
-
         axios.get(
           import.meta.env.VITE_API_URL + `/get-all-orders?page=${currentPage}&limit=10`,
           {
@@ -26,16 +24,13 @@ const Orders = () => {
             }
           }
         ).then((res) =>{
-          const {data, totalPages, currentPage} = res.data;
-          setOrders(data);
-          setTotalPages(totalPages);
-          setCurrentPage(currentPage)
-        });
-
-        
-      } catch (error) {
-        return handleErrorLogout(error, error.response.data.message)
-      }
+          const {data, totalPages, currentPage: page} = res.data;
+          setOrders(data || []);
+          setTotalPages(totalPages ?? 0);
+          setCurrentPage(page ?? 1)
+        }).catch((error) => {
+          handleErrorLogout(error, error.response?.data?.message)
+        })
     }
     fetchOrders()
   }, [currentPage] )
@@ -73,8 +68,8 @@ const Orders = () => {
                   <Card key={item._id} className="space-y-2 p-3 shadow-md  ">
                     <div className="grid sm:grid-cols-3 gap-2">
                       {
-                        item?.products?.map((product) =>(
-                          <OrderProductTile key={product._id} {...product} />
+                        item?.products?.map((product, idx) =>(
+                          <OrderProductTile key={product._id ?? `${item._id}-${idx}`} {...product} />
                         ))}
                     </div>
                     <hr />

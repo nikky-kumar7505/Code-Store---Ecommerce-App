@@ -25,8 +25,9 @@ import { setProducts } from '@/redux/slices/productSlice'
 
 const FilterManu = () => {
 
-    const [category, setCategory] = useState("")
-    const [price, setPrice] = useState("")
+    /** "all" / "0" = no filter (matches server get-products behaviour) */
+    const [category, setCategory] = useState("all")
+    const [price, setPrice] = useState("0")
     const [search, setSearch] = useState("")
 
     const dispatch = useDispatch()
@@ -44,15 +45,16 @@ const FilterManu = () => {
    
 
   return (
-    <div className='w-[93vw] flex flex-col sm:flex-row justify-between items-center mx-auto my-10 gap-3 sm:gap-0 ' >
+    <div className='w-full min-w-0 max-w-full flex flex-col sm:flex-row justify-between items-center my-10 gap-3 sm:gap-0' >
         {/* dropdown filer*/}
         <div className='flex  w-full gap-3 '>
             {/* for category  */}
-            <Select onValueChange ={(value)=> setCategory(value) }>
+            <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger id={categoryData.trigger}>
                     <SelectValue placeholder={categoryData.trigger} />
                 </SelectTrigger>
                 <SelectContent position="popper">
+                  <SelectItem value="all">All categories</SelectItem>
                   { 
                    categoryData.items.map((item)=>(
                        <SelectItem key={item} value={item} className = "capitalize" > {item} </SelectItem>
@@ -63,14 +65,15 @@ const FilterManu = () => {
             </Select>
 
             {/* price */}
-            <Select onValueChange ={(value)=> setPrice(value) }>
+            <Select value={price} onValueChange={setPrice}>
                 <SelectTrigger id={priceData.trigger}>
                     <SelectValue placeholder={priceData.trigger} />
                 </SelectTrigger>
                 <SelectContent position="popper">
+                  <SelectItem value="0">Any price</SelectItem>
                   { 
                    priceData.items.map((item)=>(
-                       <SelectItem key={item} value={item} className = "capitalize" > Less than {item} </SelectItem>
+                       <SelectItem key={item} value={String(item)} className = "capitalize" > Less than {item} </SelectItem>
 
                    ))
                   }
@@ -80,7 +83,7 @@ const FilterManu = () => {
 
             {/* search input */}
             <div className= "sm:w-[60%] w-full">
-              <Input id="search" placeholder="Search Here..." onChange={(e)=> setSearch(e.target.value)} />
+              <Input id="search" placeholder="Search Here..." value={search} onChange={(e)=> setSearch(e.target.value)} />
              
             </div>
 

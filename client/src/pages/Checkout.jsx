@@ -6,12 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { toast } from 'sonner'
 import { useNavigate } from 'react-router-dom';
 import useErrorLogout from '@/hooks/use-error-logout';
 import useRazorpay from '@/hooks/use-razorpay';
-import { emptyCart } from '@/redux/slices/cartSlice';
 import OrderData from '@/components/custom/OrderData';
 
 const Checkout = () => {
@@ -22,7 +21,6 @@ const Checkout = () => {
   )
   const {user} = useSelector((state) => state.auth) 
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const {handleErrorLogout} = useErrorLogout();
   const {generatePayment, verifyPayment}  = useRazorpay();
 
@@ -43,8 +41,11 @@ const Checkout = () => {
     
     try {
       const options = await generatePayment(totalPrice);
-      const success = verifyPayment(options, productArray, address)
-      dispatch(emptyCart());
+      if (!options?.id) {
+        toast.error("Could not start payment. Try again.");
+        return;
+      }
+      verifyPayment(options, productArray, address)
     } catch (error) {
       return handleErrorLogout(error);
     }
