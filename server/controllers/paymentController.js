@@ -4,10 +4,18 @@ var { validatePaymentVerification } = require('razorpay/dist/utils/razorpay-util
 const Product = require("../models/Product")
 const Order = require("../models/Order");
 
-var instance = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-  });
+// Lazy init: Razorpay throws at construction if key_id is missing — that crashes the whole
+// server on boot (e.g. Render without env vars). Only instantiate when keys exist.
+let razorpayInstance = null
+function getRazorpay() {
+  const key_id = process.env.RAZORPAY_KEY_ID
+  const key_secret = process.env.RAZORPAY_KEY_SECRET
+  if (!key_id || !key_secret) return null
+  if (!razorpayInstance) {
+    razorpayInstance = new Razorpay({ key_id, key_secret })
+  }
+  return razorpayInstance
+}
 
 
 const generatePayment = async (req, res) =>{
@@ -19,6 +27,13 @@ const generatePayment = async (req, res) =>{
     }
 
     try {
+        const instance = getRazorpay()
+        if (!instance) {
+            return res.status(503).json({
+                success: false,
+                message: "Payment is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET on the server.",
+            })
+        }
 
         const  options = {
             amount: Number(amount) * 100,  // Amount is in currency subunits. Default currency is INR. Hence, 50000 refers to 50000 paise
@@ -53,6 +68,13 @@ const generatePayment = async (req, res) =>{
 
 const verifyPayment = async(req, res) =>{
     const userId = req.id;
+
+    if (!process.env.RAZORPAY_KEY_SECRET) {
+        return res.status(503).json({
+            success: false,
+            message: "Payment verification is not configured. Set RAZORPAY_KEY_SECRET on the server.",
+        })
+    }
 
     try {
         const {
