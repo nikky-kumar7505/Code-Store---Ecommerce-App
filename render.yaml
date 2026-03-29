@@ -1,0 +1,12 @@
+# Render Blueprint — set "Root Directory" to repo root; service runs from /server
+# https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: code-store-api
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "20"

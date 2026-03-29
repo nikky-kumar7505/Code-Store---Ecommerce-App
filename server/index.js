@@ -1,4 +1,6 @@
 const express = require("express")
+const path = require("path")
+const { readdirSync } = require("fs")
 
 const app = express()
 const dotenv = require("dotenv")
@@ -6,7 +8,6 @@ dotenv.config()
 
 const port =  process.env.PORT ||  5000
 const cors = require("cors")
-const { readdirSync } = require("fs")
 const { connectDB } = require("./db/connection")
 
 //handle connection errors
@@ -28,10 +29,12 @@ app.get("/",(req, res)=>{
 });
 
 
-//dynamic sync routes
-(readdirSync("./routes")).map((route)=>
-    app.use("/api", require(`./routes/${route}`))
-)
+// dynamic sync routes (use __dirname so startup works when cwd is not /server)
+const routesDir = path.join(__dirname, "routes")
+readdirSync(routesDir).forEach((file) => {
+  if (!file.endsWith(".js")) return
+  app.use("/api", require(path.join(routesDir, file)))
+})
 
 
 app.listen(port, ()=>{
