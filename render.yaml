@@ -1,4 +1,4 @@
-# Render Blueprint — set "Root Directory" to repo root; service runs from /server
+# Blueprint option A — deploy only the API from /server (recommended for this monorepo)
 # https://render.com/docs/blueprint-spec
 services:
   - type: web
