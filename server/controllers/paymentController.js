@@ -5,8 +5,9 @@ const Product = require("../models/Product")
 const Order = require("../models/Order");
 
 // Lazy init: Razorpay throws at construction if key_id is missing — that crashes the whole
-// server on boot (e.g. Render without env vars). Only instantiate when keys exist.
-let razorpayInstance = null
+// server on boot (e.g. Render without env vars). Only instantiate when keys exist. 
+// hello
+let razorpayInstance = null 
 function getRazorpay() {
   const key_id = process.env.RAZORPAY_KEY_ID
   const key_secret = process.env.RAZORPAY_KEY_SECRET
