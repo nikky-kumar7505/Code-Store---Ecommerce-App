@@ -3,7 +3,7 @@ const mongoose = require("mongoose")
 const pincodeSchema = new mongoose.Schema({
     pincode : {
         type : String,
-        required : true ,
+        required :  true ,
         unique : true
     }
 }, {timestamps: true})
